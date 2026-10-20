@@ -49,15 +49,15 @@ export function WhatsAppFloat() {
   )}`;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex items-end sm:items-center gap-3">
-      {/* Welcome bubble — slides in from the icon (right → left), fades after 5s.
-          Wraps to 2 lines on small screens, single line on sm+. */}
+    <div className="fixed bottom-6 right-6 z-50 flex items-end sm:items-center gap-3 overflow-x-clip">
+      {/* Welcome bubble — slides in from behind the icon (right → left),
+          fades after 5s. Wraps to 2 lines on small screens. */}
       {!hidden && (
         <div
-          className={`flex items-center gap-2 bg-white border border-slate-200 shadow-md rounded-2xl sm:rounded-full pl-4 pr-1.5 py-2 sm:py-1.5 w-[min(calc(100vw-5.5rem),22rem)] sm:w-auto max-w-[calc(100vw-5.5rem)] transition-all duration-300 ease-out ${
+          className={`flex items-center gap-2 bg-white border border-slate-200 shadow-md rounded-2xl sm:rounded-full pl-4 pr-1.5 py-2 sm:py-1.5 w-[min(calc(100vw-5.5rem),22rem)] sm:w-auto max-w-[calc(100vw-5.5rem)] transition-all duration-[420ms] ease-out will-change-transform ${
             shown
               ? "opacity-100 translate-x-0 pointer-events-auto"
-              : "opacity-0 translate-x-6 pointer-events-none"
+              : "opacity-0 translate-x-[110%] pointer-events-none"
           }`}
           aria-hidden={!shown}
         >
