@@ -1,69 +1,115 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { MessageCircle, X } from "lucide-react";
+import { X } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
 import { siteConfig } from "@/data/siteConfig";
 
+const MESSAGE =
+  "Welcome to Hari Om Real Estate! We can assist you via WhatsApp too.";
+
 export function WhatsAppFloat() {
-  const [showTooltip, setShowTooltip] = useState(false);
-  const [hasDismissed, setHasDismissed] = useState(false);
+  const [displayText, setDisplayText] = useState("");
+  const [shown, setShown] = useState(false);
+  const [hidden, setHidden] = useState(false);
 
+  const isTyping = displayText.length < MESSAGE.length;
+
+  // Show on every page load (mount) → hold 5s → fade out → unmount
   useEffect(() => {
-    // Show tooltip after a brief 1.2s delay
-    const showTimer = setTimeout(() => {
-      setShowTooltip(true);
-    }, 1200);
-
-    // Automatically fade it away after 5 seconds
-    const hideTimer = setTimeout(() => {
-      setShowTooltip(false);
-    }, 6200);
+    const showTimer = setTimeout(() => setShown(true), 800);
+    const hideTimer = setTimeout(() => setShown(false), 5800); // 800 + 5000
+    const cleanupTimer = setTimeout(() => setHidden(true), 6200); // 5800 + 400ms fade
 
     return () => {
       clearTimeout(showTimer);
       clearTimeout(hideTimer);
+      clearTimeout(cleanupTimer);
     };
   }, []);
+
+  // Typewriter effect
+  useEffect(() => {
+    if (!shown || hidden) return;
+    if (displayText.length >= MESSAGE.length) return;
+
+    const t = setTimeout(() => {
+      setDisplayText(MESSAGE.slice(0, displayText.length + 1));
+    }, 35);
+    return () => clearTimeout(t);
+  }, [shown, displayText, hidden]);
+
+  const handleDismiss = () => {
+    setShown(false);
+    setTimeout(() => setHidden(true), 400);
+  };
 
   const whatsappUrl = `https://wa.me/${siteConfig.whatsappNumber}?text=${encodeURIComponent(
     siteConfig.whatsappDefaultMessage
   )}`;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex items-end flex-col gap-2 pointer-events-none">
-      {/* Tooltip Bubble */}
-      {showTooltip && !hasDismissed && (
-        <div className="pointer-events-auto bg-surface text-text rounded-2xl shadow-xl border border-border p-3 max-w-[220px] text-xs relative animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
+      {/* Welcome bubble — slides in from the icon (right → left), fades after 5s */}
+      {!hidden && (
+        <div
+          className={`flex items-center gap-2 bg-white border border-slate-200 rounded-full shadow-md pl-4 pr-1.5 py-1.5 max-w-[calc(100vw-6rem)] transition-all duration-300 ease-out ${
+            shown
+              ? "opacity-100 translate-x-0 pointer-events-auto"
+              : "opacity-0 translate-x-6 pointer-events-none"
+          }`}
+          aria-hidden={!shown}
+        >
+          <span className="sr-only">{MESSAGE}</span>
+
+          <span
+            aria-hidden="true"
+            className="text-xs sm:text-sm text-slate-800 whitespace-nowrap overflow-hidden text-ellipsis"
+          >
+            {displayText}
+            {isTyping && shown && (
+              <span
+                className="inline-block w-[1.5px] h-3.5 bg-slate-700 ml-0.5 align-middle"
+                style={{ animation: "wa-cursor 900ms steps(1) infinite" }}
+              />
+            )}
+          </span>
+
           <button
             type="button"
-            onClick={() => setHasDismissed(true)}
-            className="absolute top-1.5 right-1.5 p-1 text-muted hover:text-text rounded-full hover:bg-bg cursor-pointer"
+            onClick={handleDismiss}
+            className="shrink-0 p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
             aria-label="Dismiss message"
           >
-            <X className="w-3 h-3" />
+            <X className="w-3.5 h-3.5" />
           </button>
-          <div className="font-semibold text-primary mb-0.5">Welcome to Hari Om!</div>
-          <div className="text-muted leading-tight">
-            How can we assist your property search today?
-          </div>
-          {/* Tooltip Arrow */}
-          <div className="absolute -bottom-1.5 right-6 w-3 h-3 bg-surface border-b border-r border-border rotate-45" />
         </div>
       )}
 
-      {/* WhatsApp Floating Action Button */}
+      {/* WhatsApp FAB */}
       <a
         href={whatsappUrl}
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Chat with Hari Om Real Estate on WhatsApp"
-        className="pointer-events-auto w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95 animate-soft-pulse group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2"
+        className="w-14 h-14 rounded-full bg-[#25D366] hover:bg-[#1ebe5a] text-white flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366] focus-visible:ring-offset-2"
+        style={{ animation: "wa-soft-glow 3s ease-in-out infinite" }}
       >
-        <MessageCircle className="w-7 h-7 fill-white/20 transition-transform group-hover:rotate-6" />
+        <FaWhatsapp className="w-7 h-7" />
       </a>
+
+      <style>{`
+        @keyframes wa-soft-glow {
+          0%, 100% { box-shadow: 0 4px 14px rgba(37, 211, 102, 0.22); }
+          50% { box-shadow: 0 4px 22px rgba(37, 211, 102, 0.38); }
+        }
+        @keyframes wa-cursor {
+          0%, 49% { opacity: 1; }
+          50%, 100% { opacity: 0; }
+        }
+      `}</style>
     </div>
   );
 }
 
 export default WhatsAppFloat;
-
