@@ -49,11 +49,12 @@ export function WhatsAppFloat() {
   )}`;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
-      {/* Welcome bubble — slides in from the icon (right → left), fades after 5s */}
+    <div className="fixed bottom-6 right-6 z-50 flex items-end sm:items-center gap-3">
+      {/* Welcome bubble — slides in from the icon (right → left), fades after 5s.
+          Wraps to 2 lines on small screens, single line on sm+. */}
       {!hidden && (
         <div
-          className={`flex items-center gap-2 bg-white border border-slate-200 rounded-full shadow-md pl-4 pr-1.5 py-1.5 max-w-[calc(100vw-6rem)] transition-all duration-300 ease-out ${
+          className={`flex items-center gap-2 bg-white border border-slate-200 shadow-md rounded-2xl sm:rounded-full pl-4 pr-1.5 py-2 sm:py-1.5 w-[min(calc(100vw-5.5rem),22rem)] sm:w-auto max-w-[calc(100vw-5.5rem)] transition-all duration-300 ease-out ${
             shown
               ? "opacity-100 translate-x-0 pointer-events-auto"
               : "opacity-0 translate-x-6 pointer-events-none"
@@ -64,7 +65,7 @@ export function WhatsAppFloat() {
 
           <span
             aria-hidden="true"
-            className="text-xs sm:text-sm text-slate-800 whitespace-nowrap overflow-hidden text-ellipsis"
+            className="flex-1 text-xs sm:text-sm text-slate-800 text-left leading-snug line-clamp-2 sm:line-clamp-none sm:whitespace-nowrap"
           >
             {displayText}
             {isTyping && shown && (
@@ -78,7 +79,7 @@ export function WhatsAppFloat() {
           <button
             type="button"
             onClick={handleDismiss}
-            className="shrink-0 p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="shrink-0 self-start sm:self-auto p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
             aria-label="Dismiss message"
           >
             <X className="w-3.5 h-3.5" />
@@ -92,7 +93,7 @@ export function WhatsAppFloat() {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Chat with Hari Om Real Estate on WhatsApp"
-        className="w-14 h-14 rounded-full bg-[#25D366] hover:bg-[#1ebe5a] text-white flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366] focus-visible:ring-offset-2"
+        className="w-14 h-14 rounded-full bg-[#25D366] hover:bg-[#1ebe5a] text-white flex items-center justify-center shrink-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366] focus-visible:ring-offset-2"
         style={{ animation: "wa-soft-glow 3s ease-in-out infinite" }}
       >
         <FaWhatsapp className="w-7 h-7" />
