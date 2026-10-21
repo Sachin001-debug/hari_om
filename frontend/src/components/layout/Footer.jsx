@@ -177,6 +177,10 @@ export function Footer() {
             <span>Boutique Estate Experience</span>
             <span>•</span>
             <span>Rupandehi, Nepal</span>
+            <span>•</span>
+            <Link href="/admin/login" className="hover:text-accent transition-colors text-slate-400">
+              Admin Portal
+            </Link>
           </div>
         </div>
       </Container>
