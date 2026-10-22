@@ -44,8 +44,7 @@ const verifyDummyPassword = async (password) => {
 };
 
 const validatePasswordStrength = (password) => {
-  const minLength = 12;
-  const hasUpper = /[A-Z]/.test(password);
+  const minLength = 8;
   const hasLower = /[a-z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
   const hasSymbol = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
@@ -54,7 +53,6 @@ const validatePasswordStrength = (password) => {
   if (password.length < minLength) {
     errors.push(`Password must be at least ${minLength} characters long`);
   }
-  if (!hasUpper) errors.push('Password must contain at least one uppercase letter');
   if (!hasLower) errors.push('Password must contain at least one lowercase letter');
   if (!hasNumber) errors.push('Password must contain at least one number');
   if (!hasSymbol) errors.push('Password must contain at least one special character');

@@ -2,9 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { Lock, Mail, Eye, EyeOff, ShieldCheck, AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ShieldCheck, AlertCircle, Loader2, LogIn } from 'lucide-react';
 import { siteConfig } from '@/data/siteConfig';
 
 export default function AdminLoginPage() {
@@ -17,7 +16,6 @@ export default function AdminLoginPage() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // If already authenticated, redirect to /admin dashboard
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
       router.replace('/admin');
@@ -45,61 +43,54 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center px-4 py-12 bg-slate-900 text-slate-100 relative overflow-hidden">
-      {/* Background ambient lighting */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-gradient-to-b from-orange-500/15 via-blue-600/10 to-transparent blur-3xl pointer-events-none" />
+    <div className="min-h-screen bg-[#fafafc] flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden">
+      
+      {/* Very subtle background tint */}
+      <div className="absolute top-0 inset-x-0 h-[400px] bg-gradient-to-b from-orange-50/50 to-transparent pointer-events-none" />
 
-      {/* Back to website button */}
-      <div className="w-full max-w-md mb-6">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors duration-200"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to {siteConfig.name} Website
-        </Link>
+      {/* Brand Header (Above Card) */}
+      <div className="flex flex-col items-center mb-8 relative z-10">
+        {/* Logo Placeholder - replace with actual image if you have one */}
+        <div className="w-16 h-16 bg-orange-600 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center mb-4 p-2">
+      <p className='text-white font-bold'>Logo</p>
+        </div>
+        
+        <h1 className="text-2xl font-bold text-slate-900 text-center mb-1">
+          {siteConfig.name}
+        </h1>
+        <p className="text-sm text-slate-500 mb-4">Administrative Management System</p>
+        
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 text-orange-700 border border-orange-100 text-xs font-medium">
+          <ShieldCheck className="w-3.5 h-3.5" />
+          Secure Admin Portal
+        </div>
       </div>
 
       {/* Login Card */}
-      <div className="w-full max-w-md bg-slate-800/90 border border-slate-700/80 rounded-2xl p-8 shadow-2xl backdrop-blur-md relative z-10">
-        {/* Brand Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-orange-600 to-amber-500 text-white shadow-lg shadow-orange-500/25 mb-4">
-            <ShieldCheck className="w-8 h-8" />
-          </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">
-            {siteConfig.name}
-          </h1>
-          <p className="text-sm text-slate-400 mt-1 font-medium">
-            Administrative Portal Authentication
-          </p>
+      <div className="w-full max-w-[420px] bg-white rounded-2xl border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 sm:p-8 relative z-10">
+        
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-slate-900 mb-1">Sign in</h2>
+          <p className="text-sm text-slate-500">Enter your credentials to access the admin panel</p>
         </div>
 
-        {/* Error Alert Banner */}
+        {/* Error Alert */}
         {error && (
-          <div
-            role="alert"
-            className="mb-6 p-4 rounded-xl bg-red-950/60 border border-red-800/60 text-red-200 text-sm flex items-start gap-3 animate-in fade-in slide-in-from-top-1 duration-200"
-          >
-            <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-            <div className="flex-1 font-medium leading-relaxed">{error}</div>
+          <div className="mb-6 flex items-start gap-2.5 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+            <span className="leading-relaxed font-medium">{error}</span>
           </div>
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Email input */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          
+          {/* Email / Username */}
           <div>
-            <label
-              htmlFor="admin-email"
-              className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2"
-            >
-              Administrator Email
+            <label htmlFor="admin-email" className="block text-sm font-medium text-slate-700 mb-1.5">
+              Email
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                <Mail className="w-5 h-5" />
-              </div>
               <input
                 id="admin-email"
                 type="email"
@@ -108,24 +99,18 @@ export default function AdminLoginPage() {
                 autoFocus
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@hariomrealestate.com"
-                className="w-full pl-11 pr-4 py-3 bg-slate-900/80 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-sm font-medium"
+                placeholder="Enter your email"
+                className="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 outline-none transition-all focus:bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15"
               />
             </div>
           </div>
 
-          {/* Password input */}
+          {/* Password */}
           <div>
-            <label
-              htmlFor="admin-password"
-              className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2"
-            >
+            <label htmlFor="admin-password" className="block text-sm font-medium text-slate-700 mb-1.5">
               Password
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                <Lock className="w-5 h-5" />
-              </div>
               <input
                 id="admin-password"
                 type={showPassword ? 'text' : 'password'}
@@ -133,53 +118,45 @@ export default function AdminLoginPage() {
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••••••"
-                className="w-full pl-11 pr-12 py-3 bg-slate-900/80 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-sm font-medium"
+                placeholder="Enter your password"
+                className="w-full h-11 pl-4 pr-11 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 outline-none transition-all focus:bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 tabIndex={-1}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-white transition-colors"
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-          </div>
-
-          {/* Security Features Note */}
-          <div className="text-xs text-slate-400 flex items-center justify-between pt-1">
-            <span className="inline-flex items-center gap-1.5 text-slate-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              End-to-End Encrypted Session
-            </span>
-            <span className="text-slate-500">Argon2id + JWT</span>
           </div>
 
           {/* Submit Button */}
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full mt-2 py-3.5 px-4 bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-xl shadow-lg shadow-orange-600/30 transition-all flex items-center justify-center gap-2"
+            className="w-full h-11 mt-2 cursor-pointer inline-flex items-center justify-center gap-2 rounded-lg bg-orange-600 text-white text-sm font-medium transition-colors hover:bg-orange-700 disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Verifying Credentials...</span>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Signing in...</span>
               </>
             ) : (
-              <span>Sign In to Dashboard</span>
+              <>
+                <LogIn className="w-4 h-4" />
+                <span>Sign In</span>
+              </>
             )}
           </button>
         </form>
+      </div>
 
-        {/* Footer info */}
-        <div className="mt-8 pt-6 border-t border-slate-700/60 text-center text-xs text-slate-500">
-          Authorized personnel only. All access attempts and telemetry are actively audited.
-        </div>
+      {/* Footer Copyright */}
+      <div className="mt-8 text-center text-xs text-slate-400 relative z-10">
+        &copy; {new Date().getFullYear()} {siteConfig.name}. All rights reserved.
       </div>
     </div>
   );
 }
-

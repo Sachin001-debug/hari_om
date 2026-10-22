@@ -1,29 +1,60 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #0e2946;
-  --color-primary-dark: #071729;
-  --color-primary-light: #1b436c;
-  --color-accent: #f97316;
+  /* Changed primary to dark slate to match the clean login page text */
+  --color-primary: #0f172a;
+  --color-primary-dark: #020617;
+  --color-primary-light: #334155;
+  
+  /* Orange Accents */
+  --color-accent: #f97316; 
   --color-accent-hover: #ea580c;
-  --color-accent-light: #ffedd5;
-  --color-bg: #f8fafc;
+  --color-accent-light: #fff7ed; /* Very light orange for backgrounds */
+  
+  /* Clean Backgrounds */
+  --color-bg: #fafafc;
   --color-surface: #ffffff;
+  
+  /* Typography & Borders */
   --color-text: #0f172a;
   --color-muted: #64748b;
   --color-border: #e2e8f0;
+  
   --font-serif: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-sans: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+}
+
+@theme inline {
+  --color-admin-primary: var(--admin-primary);
+  --color-admin-primary-hover: var(--admin-primary-hover);
+  --color-admin-primary-soft: var(--admin-primary-soft);
+  --color-admin-bg: var(--admin-bg);
+  --color-admin-surface: var(--admin-surface);
+  --color-admin-text: var(--admin-text);
+  --color-admin-muted: var(--admin-muted);
+  --color-admin-border: var(--admin-border);
+}
+
+.admin-theme {
+  --admin-primary: #ea7a2f;
+  --admin-primary-hover: #d96a20;
+  --admin-primary-soft: #fff3ea;
+  --admin-bg: #fafafa;
+  --admin-surface: #ffffff;
+  --admin-text: #1f2937;
+  --admin-muted: #6b7280;
+  --admin-border: #eceef1;
 }
 
 :root {
-  --color-primary: #0e2946;
-  --color-primary-dark: #071729;
-  --color-primary-light: #1b436c;
+  --color-primary: #0f172a;
+  --color-primary-dark: #020617;
+  --color-primary-light: #334155;
   --color-accent: #f97316;
   --color-accent-hover: #ea580c;
-  --color-accent-light: #ffedd5;
-  --color-bg: #f8fafc;
+  --color-accent-light: #fff7ed;
+  --color-bg: #fafafc;
   --color-surface: #ffffff;
   --color-text: #0f172a;
   --color-muted: #64748b;
@@ -61,32 +92,4 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
-}
-
-/* WhatsApp gentle pulse */
-@keyframes softPulse {
-  0%, 100% {
-    transform: scale(1);
-    box-shadow: 0 4px 14px rgba(37, 211, 102, 0.35);
-  }
-  50% {
-    transform: scale(1.05);
-    box-shadow: 0 6px 20px rgba(37, 211, 102, 0.5);
-  }
-}
-
-.animate-soft-pulse {
-  animation: softPulse 2.8s infinite ease-in-out;
-}
-
-/* Reduced motion preference */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
 }
