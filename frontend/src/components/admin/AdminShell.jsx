@@ -16,7 +16,12 @@ export default function AdminShell({ children }) {
   const drawerRef = useRef(null);
   const triggerRef = useRef(null);
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
-  const title = pathname === '/admin/settings' ? 'Settings' : 'Dashboard';
+  const pageTitles = {
+    '/admin/settings': 'Settings',
+    '/admin/add-property': 'Add Property',
+    '/admin/properties': 'Properties',
+  };
+  const title = pageTitles[pathname] || 'Dashboard';
 
   useEffect(() => { closeDrawer(); }, [pathname, closeDrawer]);
   useEffect(() => {

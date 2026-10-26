@@ -1,13 +1,19 @@
+const fs = require('fs');
+const path = require('path');
 const env = require('./env');
 
 const getDialectOptions = () => {
   const options = {};
 
   if (env.DB_SSL) {
-    options.ssl = {
+    const ssl = {
       require: true,
-      rejectUnauthorized: false
+      rejectUnauthorized: true
     };
+    if (env.DB_SSL_CA_PATH) {
+      ssl.ca = fs.readFileSync(path.resolve(__dirname, '../..', env.DB_SSL_CA_PATH));
+    }
+    options.ssl = ssl;
   }
 
   return options;
@@ -27,22 +33,18 @@ const safeQueryLogger = (sql) => {
 };
 
 let host = env.DB_HOST;
-let port = Number(env.DB_PORT) || 3307;
+let port = Number(env.DB_PORT) || 3306;
 let username = env.DB_USER;
 let password = env.DB_PASSWORD;
 let database = env.DB_NAME;
 
 if (env.DATABASE_URL) {
-  try {
-    const parsed = new URL(env.DATABASE_URL);
-    host = parsed.hostname;
-    port = parsed.port ? parseInt(parsed.port, 10) : 3306;
-    username = decodeURIComponent(parsed.username || 'root');
-    password = decodeURIComponent(parsed.password || '');
-    database = parsed.pathname ? parsed.pathname.replace(/^\//, '') : env.DB_NAME;
-  } catch {
-    // Fall back to discrete DB_* settings
-  }
+  const parsed = new URL(env.DATABASE_URL);
+  host = parsed.hostname;
+  port = parsed.port ? parseInt(parsed.port, 10) : 3306;
+  username = decodeURIComponent(parsed.username);
+  password = decodeURIComponent(parsed.password);
+  database = parsed.pathname.replace(/^\//, '');
 }
 
 const baseConfig = {
@@ -74,7 +76,7 @@ module.exports = {
   },
   test: {
     ...baseConfig,
-    database: process.env.DB_NAME_TEST || `${database}_test`,
+    database: env.DB_NAME_TEST,
     logging: false
   },
   production: {
@@ -82,4 +84,3 @@ module.exports = {
     logging: false
   }
 };
-

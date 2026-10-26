@@ -12,11 +12,11 @@ const startServer = async () => {
     logger.info('Database connection established successfully via Sequelize.');
 
     server = app.listen(env.PORT, () => {
-      logger.info(`🚀 Hari Om Real Estate Auth Server running on port ${env.PORT} [${env.NODE_ENV}]`);
-      logger.info(`🔒 Allowed Frontend Origin: ${env.FRONTEND_URL}`);
+      logger.info(`Hari Om Real Estate API Server running on port ${env.PORT} [${env.NODE_ENV}]`);
+      logger.info(`Allowed Frontend Origin: ${env.FRONTEND_URL}`);
     });
   } catch (err) {
-    logger.error('❌ Failed to connect to the database. Server startup aborted.', err);
+    logger.error('Failed to connect to the database. Server startup aborted.', err);
     process.exit(1);
   }
 };

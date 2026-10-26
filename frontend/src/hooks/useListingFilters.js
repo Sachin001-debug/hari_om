@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useTransition, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { listings as allListings } from "@/data/listings";
+import { getListings } from "@/lib/listingService";
 import { filterListings } from "@/lib/filterListings";
 import { useDebounce } from "./useDebounce";
 import { formatPrice } from "@/lib/formatPrice";
@@ -11,12 +12,32 @@ import { formatPrice } from "@/lib/formatPrice";
  * Primary hook managing real estate listing filters, URL query synchronization,
  * debounced search inputs, and results computation.
  */
-export function useListingFilters() {
+export function useListingFilters(initialListings = null) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [isSimulatingLoad, setIsSimulatingLoad] = useState(false);
+  const [dataListings, setDataListings] = useState(initialListings || allListings);
+
+  // Load fresh properties from real database API
+  useEffect(() => {
+    let isMounted = true;
+    async function loadFreshListings() {
+      try {
+        const result = await getListings();
+        if (isMounted && result?.listings?.length) {
+          setDataListings(result.listings);
+        }
+      } catch {
+        // preserve fallback
+      }
+    }
+    loadFreshListings();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Parse state from URL search params
   const currentCity = searchParams.get("city") || "all";
@@ -205,8 +226,8 @@ export function useListingFilters() {
 
   // Compute filtered results
   const filteredListings = useMemo(() => {
-    return filterListings(allListings, activeFilters);
-  }, [activeFilters]);
+    return filterListings(dataListings, activeFilters);
+  }, [dataListings, activeFilters]);
 
   // Compute active chips list for UI representation
   const activeChips = useMemo(() => {
@@ -338,7 +359,7 @@ export function useListingFilters() {
     // Data results
     listings: filteredListings,
     totalCount: filteredListings.length,
-    availableCount: allListings.length,
+    availableCount: dataListings.length,
     isLoading,
 
     // Chips & active states

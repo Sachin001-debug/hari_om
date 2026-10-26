@@ -1,15 +1,12 @@
-import { listings } from "@/data/listings";
+import { listings as demoListings } from "@/data/listings";
 import { CITIES, AREAS_BY_CITY, POPULAR_AREAS, POPULAR_KEYWORDS } from "@/data/locations";
 import { filterListings } from "./filterListings";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
+
 /**
  * Service Layer for Listings.
- *
- * NOTE FOR BACKEND INTEGRATION:
- * When migrating to a real backend API, only modify the implementation inside
- * these functions (e.g. swap with `fetch('/api/listings?...')`).
- * The interface, arguments, and returned structures are intentionally designed
- * to match production REST/GraphQL conventions.
+ * Fetches database-driven property listings from backend API with demo fallback.
  */
 
 /**
@@ -17,7 +14,7 @@ import { filterListings } from "./filterListings";
  *
  * @param {Object} filters - Query filters (q, city, areas, type, minPrice, maxPrice, etc.)
  * @param {Object} options - Service options (simulateDelayMs, page, limit)
- * @returns {Promise<{ listings: Array, total: number, availableCount: number }>}
+ * @returns {Promise<{ listings: Array, total: number, availableCount: number, page: number, limit: number, totalPages: number }>}
  */
 export async function getListings(filters = {}, options = {}) {
   const { simulateDelayMs = 0, page = 1, limit = 50 } = options;
@@ -26,14 +23,29 @@ export async function getListings(filters = {}, options = {}) {
     await new Promise((resolve) => setTimeout(resolve, simulateDelayMs));
   }
 
-  const filtered = filterListings(listings, filters);
+  let propertyList = [];
+  try {
+    const res = await fetch(`${API_BASE_URL}/properties`, {
+      cache: "no-store",
+    });
+    if (res.ok) {
+      const data = await res.json();
+      propertyList = data.properties || [];
+    } else {
+      propertyList = demoListings;
+    }
+  } catch {
+    propertyList = demoListings;
+  }
+
+  const filtered = filterListings(propertyList, filters);
   const startIndex = (page - 1) * limit;
   const paginated = filtered.slice(startIndex, startIndex + limit);
 
   return {
     listings: paginated,
     total: filtered.length,
-    availableCount: listings.length,
+    availableCount: propertyList.length,
     page,
     limit,
     totalPages: Math.ceil(filtered.length / limit),
@@ -46,8 +58,18 @@ export async function getListings(filters = {}, options = {}) {
  * @returns {Promise<Object|null>}
  */
 export async function getListingById(id) {
-  const listing = listings.find((item) => item.id === id);
-  return listing || null;
+  try {
+    const res = await fetch(`${API_BASE_URL}/properties/${encodeURIComponent(id)}`, {
+      cache: "no-store",
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return data.property || null;
+    }
+  } catch {
+    // fallback
+  }
+  return demoListings.find((item) => item.id === id) || null;
 }
 
 /**
@@ -56,8 +78,18 @@ export async function getListingById(id) {
  * @returns {Promise<Object|null>}
  */
 export async function getListingBySlug(slug) {
-  const listing = listings.find((item) => item.slug === slug);
-  return listing || null;
+  try {
+    const res = await fetch(`${API_BASE_URL}/properties/${encodeURIComponent(slug)}`, {
+      cache: "no-store",
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return data.property || null;
+    }
+  } catch {
+    // fallback
+  }
+  return demoListings.find((item) => item.slug === slug) || null;
 }
 
 /**
@@ -79,6 +111,16 @@ export async function getLocations() {
  * @returns {Promise<Array>}
  */
 export async function getFeaturedListings(limit = 4) {
-  return listings.filter((item) => item.featured).slice(0, limit);
+  try {
+    const res = await fetch(`${API_BASE_URL}/properties/featured?limit=${limit}`, {
+      cache: "no-store",
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return data.properties || [];
+    }
+  } catch {
+    // fallback
+  }
+  return demoListings.filter((item) => item.featured).slice(0, limit);
 }
-

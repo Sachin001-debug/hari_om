@@ -34,12 +34,23 @@ const errorHandler = (err, req, res, next) => {
     message = 'Malformed JSON in request body.';
   }
 
-  // Log non-operational or internal server errors
+  // Log errors based on severity
   if (statusCode >= 500) {
     logger.error(`Server Error: ${message}`, err, {
+      requestId: req.id,
       path: req.originalUrl,
       method: req.method,
-      ip: req.ip
+      ip: req.ip,
+      adminId: req.admin?.id
+    });
+  } else if (statusCode >= 400) {
+    logger.warn(`Client Error (${statusCode}): ${message}`, {
+      requestId: req.id,
+      path: req.originalUrl,
+      method: req.method,
+      ip: req.ip,
+      adminId: req.admin?.id,
+      errors
     });
   }
 

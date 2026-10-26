@@ -2,6 +2,9 @@ import { Suspense } from "react";
 import { HomePageClient } from "@/components/home/HomePageClient";
 import { Container } from "@/components/ui/Container";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 function HomeLoadingFallback() {
   return (
     <div className="min-h-screen bg-bg">

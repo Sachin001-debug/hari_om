@@ -35,7 +35,7 @@ const logger = {
 
   security: (message, meta = {}) => {
     const timestamp = new Date().toISOString();
-    console.warn(`[${timestamp}] [SECURITY_ALERT] 🚨 ${message}`, Object.keys(meta).length ? maskSensitiveData(meta) : '');
+    console.warn(`[${timestamp}] [SECURITY_ALERT] ${message}`, Object.keys(meta).length ? maskSensitiveData(meta) : '');
   },
 
   error: (message, error = null, meta = {}) => {

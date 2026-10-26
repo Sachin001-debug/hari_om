@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 /**
  * Enhanced fetch wrapper:
@@ -9,11 +9,16 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/a
 export async function apiFetch(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
 
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+
   const headers = {
-    'Content-Type': 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
     ...(options.headers || {})
   };
+
+  if (!isFormData && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   const config = {
     ...options,
@@ -21,15 +26,15 @@ export async function apiFetch(endpoint, options = {}) {
     credentials: 'include' // Mandatory to send and receive httpOnly cookies
   };
 
-  if (config.body && typeof config.body === 'object' && !(config.body instanceof FormData)) {
+  if (config.body && typeof config.body === 'object' && !isFormData) {
     config.body = JSON.stringify(config.body);
   }
 
   let response;
   try {
     response = await fetch(url, config);
-  } catch (networkError) {
-    throw new Error('Unable to connect to the backend server. Please verify the API is running on port 5000.');
+  } catch {
+    throw new Error('Unable to connect to the API. Check the API URL and backend availability.');
   }
 
   let data = null;
@@ -104,3 +109,60 @@ export const logoutAdmin = async () => {
   });
 };
 
+// Properties API methods
+export const createProperty = async (formData) => {
+  return apiFetch('/properties', {
+    method: 'POST',
+    body: formData
+  });
+};
+
+export const fetchProperties = async (params = {}) => {
+  const searchParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null && value !== '' && value !== 'all') {
+      searchParams.append(key, value);
+    }
+  }
+  const query = searchParams.toString();
+  return apiFetch(`/properties${query ? `?${query}` : ''}`, {
+    method: 'GET'
+  });
+};
+
+export const fetchAdminProperties = async (params = {}) => {
+  const searchParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null && value !== '') {
+      searchParams.append(key, value);
+    }
+  }
+  const query = searchParams.toString();
+  return apiFetch(`/properties/admin${query ? `?${query}` : ''}`, {
+    method: 'GET'
+  });
+};
+
+export const deleteProperty = async (id) => {
+  return apiFetch(`/properties/${encodeURIComponent(id)}`, {
+    method: 'DELETE'
+  });
+};
+
+export const fetchPropertyBySlug = async (slug) => {
+  return apiFetch(`/properties/${encodeURIComponent(slug)}`, {
+    method: 'GET'
+  });
+};
+
+export const fetchFeaturedProperties = async (limit = 4) => {
+  return apiFetch(`/properties/featured?limit=${limit}`, {
+    method: 'GET'
+  });
+};
+
+export const fetchPropertyStats = async () => {
+  return apiFetch('/properties/stats', {
+    method: 'GET'
+  });
+};

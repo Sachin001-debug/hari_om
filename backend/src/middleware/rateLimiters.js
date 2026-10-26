@@ -59,9 +59,28 @@ const generalApiLimiter = rateLimit({
   }
 });
 
+// Limiter for property creation endpoint
+// 60 requests per 15 minutes per IP
+const propertyCreationLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    return req.admin?.id || req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+  },
+  handler: (req, res) => {
+    res.status(429).json({
+      success: false,
+      message: 'Too many property creation requests. Please try again later.'
+    });
+  }
+});
+
 module.exports = {
   loginLimiter,
   refreshLimiter,
-  generalApiLimiter
+  generalApiLimiter,
+  propertyCreationLimiter
 };
 

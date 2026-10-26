@@ -14,16 +14,19 @@ const sequelize = new Sequelize(config.database, config.username, config.passwor
 const defineAdmin = require('./models/Admin');
 const defineRefreshToken = require('./models/RefreshToken');
 const defineLoginAudit = require('./models/LoginAudit');
+const defineProperty = require('./models/Property');
 
 // Initialize models
 const Admin = defineAdmin(sequelize, DataTypes);
 const RefreshToken = defineRefreshToken(sequelize, DataTypes);
 const LoginAudit = defineLoginAudit(sequelize, DataTypes);
+const Property = defineProperty(sequelize, DataTypes);
 
 const models = {
   Admin,
   RefreshToken,
-  LoginAudit
+  LoginAudit,
+  Property
 };
 
 // Establish associations
@@ -39,6 +42,7 @@ module.exports = {
   models,
   Admin,
   RefreshToken,
-  LoginAudit
+  LoginAudit,
+  Property
 };
 

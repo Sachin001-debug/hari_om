@@ -1,27 +1,14 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { fetchPropertyStats } from "@/lib/api";
 import {
-  Building2, CalendarDays, CheckCircle2, CircleDollarSign,
-  Home, Mail, Map, Star, BadgeCheck,
+  Building2, CalendarDays, CheckCircle2, Home, Map,
 } from "lucide-react";
 import PageHeader from "@/components/admin/PageHeader";
 import SystemOverview from "@/components/admin/SystemOverview";
 import QuickActions from "@/components/admin/QuickActions";
-
-const propertyStats = [
-  { label: "Total Listings", hint: "All properties", icon: Building2, value: 0 },
-  { label: "Active Listings", hint: "Currently live", icon: CheckCircle2, value: 0 },
-  { label: "Houses", hint: "Residential homes", icon: Home, value: 0 },
-  { label: "Plots", hint: "Land listings", icon: Map, value: 0 },
-];
-
-const activityStats = [
-  { label: "Featured", hint: "Highlighted on site", icon: Star, value: 0 },
-  { label: "Enquiries", hint: "Total received", icon: Mail, value: 0 },
-  { label: "Negotiable", hint: "Open to offers", icon: CircleDollarSign, value: 0 },
-  { label: "Sold", hint: "Completed sales", icon: BadgeCheck, value: 0 },
-];
 
 const dateFormat = new Intl.DateTimeFormat("en-US", {
   weekday: "long", month: "long", day: "numeric", year: "numeric",
@@ -37,13 +24,13 @@ function StatCard({ label, hint, icon: Icon, value }) {
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-admin-accent/10 text-admin-accent transition-colors group-hover:bg-admin-accent/15">
           <Icon className="h-5 w-5" aria-hidden="true" />
         </div>
-        <span className="text-2xl font-semibold tabular-nums text-admin-fg">
+        <span className="text-xl font-semibold tabular-nums text-admin-fg">
           {value}
         </span>
       </div>
       <div className="mt-4">
-        <p className="text-sm font-medium text-admin-fg">{label}</p>
-        <p className="mt-0.5 text-xs text-admin-muted">{hint}</p>
+        <p className="text-xs font-medium text-admin-fg">{label}</p>
+        <p className="mt-0.5 text-[11px] text-admin-muted">{hint}</p>
       </div>
     </div>
   );
@@ -51,9 +38,9 @@ function StatCard({ label, hint, icon: Icon, value }) {
 
 function StatGroup({ title, items }) {
   return (
-    <section aria-label={title} className="space-y-4">
+    <section aria-label={title} className="space-y-3">
       <div className="flex items-center gap-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-admin-muted">
+        <h2 className="text-[11px] font-semibold uppercase tracking-wider text-admin-muted">
           {title}
         </h2>
         <span className="h-px flex-1 bg-admin-border" />
@@ -75,8 +62,36 @@ export default function AdminDashboardPage() {
   const firstName = admin?.name?.split(" ")[0];
   const lastLogin = admin?.lastLoginAt ? loginFormat.format(new Date(admin.lastLoginAt)) : "—";
 
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    houses: 0,
+    plots: 0,
+  });
+
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        const response = await fetchPropertyStats();
+        if (response?.stats) {
+          setStats(response.stats);
+        }
+      } catch {
+        // preserve fallback
+      }
+    }
+    loadStats();
+  }, []);
+
+  const propertyStats = [
+    { label: "Total Listings", hint: "All properties", icon: Building2, value: stats.total },
+    { label: "Active Listings", hint: "Currently live", icon: CheckCircle2, value: stats.active },
+    { label: "Houses", hint: "Residential homes", icon: Home, value: stats.houses },
+    { label: "Plots", hint: "Land listings", icon: Map, value: stats.plots },
+  ];
+
   return (
-    <div className="mx-auto max-w-[1280px] space-y-8">
+    <div className="mx-auto max-w-[1280px] space-y-6">
       <PageHeader
         title="Dashboard"
         description={`Welcome back${firstName ? `, ${firstName}` : ""}. Here is an overview of your listings.`}
@@ -89,11 +104,10 @@ export default function AdminDashboardPage() {
       />
 
       <StatGroup title="Properties" items={propertyStats} />
-      <StatGroup title="Activity" items={activityStats} />
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-6">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-5">
         <div className="lg:col-span-2">
-          <SystemOverview lastLogin={lastLogin} />
+          <SystemOverview lastLogin={lastLogin} totalContent={stats.total} liveCount={stats.active} />
         </div>
         <QuickActions />
       </div>

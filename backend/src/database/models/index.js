@@ -1,4 +1,4 @@
-const { sequelize, Sequelize, models, Admin, RefreshToken, LoginAudit } = require('../index');
+const { sequelize, Sequelize, models, Admin, RefreshToken, LoginAudit, Property } = require('../index');
 
 module.exports = {
   sequelize,
@@ -6,6 +6,7 @@ module.exports = {
   models,
   Admin,
   RefreshToken,
-  LoginAudit
+  LoginAudit,
+  Property
 };
 

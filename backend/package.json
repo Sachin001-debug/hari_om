@@ -14,7 +14,8 @@
     "db:seed": "sequelize-cli db:seed:all",
     "db:seed:undo": "sequelize-cli db:seed:undo:all",
     "db:reset": "npm run db:migrate:undo:all && npm run db:migrate && npm run db:seed",
-    "db:migration:create": "sequelize-cli migration:generate --name"
+    "db:migration:create": "sequelize-cli migration:generate --name",
+    "test": "node --test tests/**/*.test.js"
   },
   "dependencies": {
     "argon2": "^0.41.1",
@@ -27,11 +28,16 @@
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
+    "multer": "^2.5.0",
     "mysql2": "^3.12.0",
     "sequelize": "6.37.8",
-    "zod": "^3.24.2"
+    "sharp": "^0.35.5",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "sequelize-cli": "6.6.5"
+  },
+  "overrides": {
+    "uuid": "11.1.1"
   }
 }

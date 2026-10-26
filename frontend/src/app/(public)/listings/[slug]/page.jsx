@@ -12,15 +12,20 @@ import {
   Clock,
 } from "lucide-react";
 import { listings } from "@/data/listings";
-import { getListingBySlug } from "@/lib/listingService";
+import { getListingBySlug, getListings } from "@/lib/listingService";
 import { formatPrice, formatLandArea } from "@/lib/formatPrice";
 import { siteConfig } from "@/data/siteConfig";
 import { Container } from "@/components/ui/Container";
 import { ListingCard } from "@/components/listings/ListingCard";
 
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+
 // Pre-render all listing slugs for instant page delivery
 export async function generateStaticParams() {
-  return listings.map((listing) => ({
+  const result = await getListings();
+  const list = result?.listings?.length ? result.listings : listings;
+  return list.map((listing) => ({
     slug: listing.slug,
   }));
 }
@@ -76,7 +81,9 @@ export default async function PropertyDetailsPage({ params }) {
   const whatsappUrl = `https://wa.me/${siteConfig.whatsappNumber}?text=${whatsappText}`;
 
   // Find 3 similar properties in the same city or category
-  const relatedListings = listings
+  const allResult = await getListings();
+  const currentListings = allResult?.listings?.length ? allResult.listings : listings;
+  const relatedListings = currentListings
     .filter(
       (item) =>
         item.id !== listing.id &&
@@ -89,15 +96,15 @@ export default async function PropertyDetailsPage({ params }) {
     { label: "Land Area", value: formatLandArea(listing.landArea) },
     { label: "Facing", value: `${listing.facing || "East"} (Vastu friendly)` },
     { label: "Road Access", value: listing.roadWidth || "20 ft pitched" },
-    { label: "Legal Status", value: "Freehold (Lalpurja verified)" },
-    { label: "Water Supply", value: "Deep boring & municipal line" },
-    { label: "Electricity", value: "NEA 3-phase connection" },
+    { label: "Legal Status", value: listing.legalStatus || "Freehold (Lalpurja verified)" },
+    { label: "Water Supply", value: listing.waterSupply || "Deep boring & municipal line" },
+    { label: "Electricity", value: listing.electricity || "NEA 3-phase connection" },
     ...(isHouse
       ? [
           { label: "Bedrooms", value: `${listing.bedrooms} BHK` },
           { label: "Bathrooms", value: `${listing.bathrooms}` },
-          { label: "Parking", value: "Covered garage (2 cars)" },
-          { label: "Construction", value: "Earthquake-resistant RCC frame" },
+          { label: "Parking", value: listing.parking || "Covered garage (2 cars)" },
+          { label: "Construction", value: listing.construction || "Earthquake-resistant RCC frame" },
         ]
       : []),
   ];
@@ -202,7 +209,7 @@ export default async function PropertyDetailsPage({ params }) {
             {/* Primary image */}
             <div className="relative aspect-16/10 w-full rounded-lg overflow-hidden bg-slate-100">
               <Image
-                src={listing.image}
+                src={listing.image || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80"}
                 alt={listing.title}
                 fill
                 priority

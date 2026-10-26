@@ -79,6 +79,16 @@ Generate secure 48-byte hex secrets for `JWT_ACCESS_SECRET` and `JWT_REFRESH_SEC
 node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 ```
 
+### Hosted MySQL (Aiven)
+For Aiven MySQL, use the service's connection host, port, database name, username, and password. Enable TLS and verify the server certificate:
+```env
+DB_SSL=true
+DB_SSL_CA_PATH=src/certs/ca.pem
+```
+Download the CA certificate from the Aiven service console and save it at `backend/src/certs/ca.pem` (or set `DB_SSL_CA_PATH` to another path relative to the `backend` directory). Keep the certificate out of source control. When `DB_SSL=true`, the API requires TLS and validates the server certificate; the server will not start if the CA file cannot be read or the certificate cannot be verified. Production startup also rejects disabled TLS and the root database user.
+
+Check the connection with `npm start` or `npm run db:migrate:status`. The migration-status command may create Sequelize's `SequelizeMeta` bookkeeping table if it does not exist.
+
 ### 2. Database Migration & Seeding
 
 #### For Existing Databases:
@@ -123,7 +133,7 @@ Production mode:
 ```bash
 npm start
 ```
-The server runs on `http://localhost:5000`.
+The server listens on the port configured by `PORT` (default `5000`).
 
 ---
 
@@ -134,7 +144,7 @@ In production, never use the `root` MySQL user for running the application. Use 
 ### 1. Application Runtime User (Least Privilege)
 This user only requires Data Manipulation Language (DML) permissions. It cannot drop tables or alter the database schema:
 ```sql
-CREATE USER 'hariom_app'@'%' IDENTIFIED BY 'StrongAppPassword#2026!';
+CREATE USER 'hariom_app'@'%' IDENTIFIED BY '<SET_A_UNIQUE_STRONG_PASSWORD>';
 GRANT SELECT, INSERT, UPDATE, DELETE ON hari_om_real_estate.* TO 'hariom_app'@'%';
 FLUSH PRIVILEGES;
 ```
@@ -142,25 +152,30 @@ FLUSH PRIVILEGES;
 ### 2. Migration User (CI/CD Pipeline Only)
 This user requires Data Definition Language (DDL) permissions to run migrations:
 ```sql
-CREATE USER 'hariom_deployer'@'%' IDENTIFIED BY 'StrongDeployPassword#2026!';
+CREATE USER 'hariom_deployer'@'%' IDENTIFIED BY '<SET_A_DIFFERENT_STRONG_PASSWORD>';
 GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, REFERENCES ON hari_om_real_estate.* TO 'hariom_deployer'@'%';
 FLUSH PRIVILEGES;
 ```
 
 ### 3. Production Deployment Commands
 ```bash
-# Install production dependencies only (no sequelize-cli)
-npm install --omit=dev
+# Render root directory: backend/
+# Render build command: npm ci
+# Render start command: npm start
+# Render health check path: /api/health
+# Attach a Render persistent disk at /var/data and set UPLOAD_DIR=/var/data.
+#
+# Run migrations separately in a controlled release/CI job, using the
+# migration-only database user rather than Render runtime credentials:
+npm run db:migrate -- --env production
 
-# Run migrations using sequelize-cli in production environment (run by migration user)
-npx sequelize-cli db:migrate --env production
-
-# Seed initial super admin if necessary (idempotent)
-npx sequelize-cli db:seed:all --env production
-
-# Start application server
-npm start
+# Seed the administrator only when intentionally provisioning it:
+npm run db:seed -- --env production
 ```
+
+For Vercel, set `frontend/` as the root directory and use `npm run build`. Set `BACKEND_URL` to the HTTPS Render service origin so Next.js proxies `/api/*` and `/uploads/*` through the frontend origin. Keep `NEXT_PUBLIC_API_URL` empty or set it to `/api` so authentication cookies remain same-site. Set backend `FRONTEND_URL` to the exact production Vercel domain. CORS and CSRF checks permit only this exact origin.
+
+Attach a persistent disk to the Render backend service with mount path `/var/data` and set `UPLOAD_DIR=/var/data`. Production startup fails unless this absolute upload directory already exists, preventing uploads from silently falling back to Render's ephemeral filesystem. Back up the disk or move uploads to durable object storage if they need independent retention.
 
 ---
 

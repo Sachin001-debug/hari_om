@@ -14,11 +14,11 @@ export default function PageHeader({ title, description, meta, actions, classNam
     >
       {/* Title + description */}
       <div className="min-w-0">
-        <h1 className="truncate text-2xl font-semibold tracking-tight text-admin-fg sm:text-3xl">
+        <h1 className="truncate text-xl font-semibold tracking-tight text-admin-fg sm:text-2xl">
           {title}
         </h1>
         {description && (
-          <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-admin-muted">
+          <p className="mt-1 max-w-2xl text-xs leading-relaxed text-admin-muted">
             {description}
           </p>
         )}

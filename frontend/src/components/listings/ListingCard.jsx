@@ -10,6 +10,7 @@ export function ListingCard({ listing }) {
 
   const isHouse = listing.type === "house";
   const propertyUrl = `/listings/${listing.slug}`;
+  const imageSrc = listing.image || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80";
   const whatsappText = encodeURIComponent(
     `Namaste Hari Om Real Estate! I am interested in "${listing.title}" (${listing.area}, ${listing.city}) listed at ${formatPrice(
       listing.price
@@ -26,7 +27,7 @@ export function ListingCard({ listing }) {
         aria-label={`View full details of ${listing.title}`}
       >
         <Image
-          src={listing.image}
+          src={imageSrc}
           alt={listing.title}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

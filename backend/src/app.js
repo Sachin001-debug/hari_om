@@ -1,4 +1,6 @@
 const express = require('express');
+const path = require('path');
+const crypto = require('crypto');
 const helmet = require('helmet');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
@@ -21,6 +23,13 @@ app.set('trust proxy', 1);
 // Disable X-Powered-By header
 app.disable('x-powered-by');
 
+// Assign unique request ID for structured logging and traceability
+app.use((req, res, next) => {
+  req.id = req.headers['x-request-id'] || crypto.randomUUID();
+  res.setHeader('X-Request-Id', req.id);
+  next();
+});
+
 // Strict HTTP security headers with Helmet
 app.use(
   helmet({
@@ -32,7 +41,7 @@ app.use(
       }
     },
     crossOriginEmbedderPolicy: false,
-    crossOriginResourcePolicy: { policy: 'same-site' },
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
     hsts: {
       maxAge: 31536000,
       includeSubDomains: true,
@@ -61,6 +70,22 @@ app.use(cookieParser());
 // Response compression
 app.use(compression());
 
+// Safe static image serving with security headers
+const uploadsPath = path.resolve(__dirname, '..', env.UPLOAD_DIR);
+app.use(
+  '/uploads',
+  express.static(uploadsPath, {
+    dotfiles: 'ignore',
+    etag: true,
+    index: false,
+    maxAge: '7d',
+    setHeaders: (res) => {
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+    }
+  })
+);
+
 // General rate limiter on all API routes
 app.use('/api', generalApiLimiter);
 
@@ -77,4 +102,3 @@ app.use(notFound);
 app.use(errorHandler);
 
 module.exports = app;
-

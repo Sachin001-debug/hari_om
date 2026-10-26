@@ -93,6 +93,11 @@ module.exports = (sequelize, DataTypes) => {
       as: 'loginAudits',
       onDelete: 'SET NULL'
     });
+    Admin.hasMany(models.Property, {
+      foreignKey: 'createdBy',
+      as: 'properties',
+      onDelete: 'SET NULL'
+    });
   };
 
   return Admin;
