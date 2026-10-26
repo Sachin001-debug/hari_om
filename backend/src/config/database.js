@@ -11,7 +11,32 @@ const getDialectOptions = () => {
       rejectUnauthorized: true
     };
     if (env.DB_SSL_CA_PATH) {
-      ssl.ca = fs.readFileSync(path.resolve(__dirname, '../..', env.DB_SSL_CA_PATH));
+      const configuredCaPath = path.resolve(__dirname, '../..', env.DB_SSL_CA_PATH);
+      const renderCaPath = '/etc/secrets/ca.pem';
+      const caPaths = env.NODE_ENV === 'production'
+        ? [configuredCaPath, renderCaPath].filter((caPath, index, paths) => paths.indexOf(caPath) === index)
+        : [configuredCaPath];
+      let lastError;
+
+      for (const caPath of caPaths) {
+        try {
+          const caStats = fs.statSync(caPath);
+          if (!caStats.isFile()) {
+            throw new Error('Configured CA path is not a file.');
+          }
+          ssl.ca = fs.readFileSync(caPath);
+          break;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      if (!ssl.ca) {
+        throw new Error(
+          `Unable to read the database CA certificate. Check DB_SSL_CA_PATH. On Render, add the CA as a Secret File named ca.pem; it is available at /etc/secrets/ca.pem.`,
+          { cause: lastError }
+        );
+      }
     }
     options.ssl = ssl;
   }

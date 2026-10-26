@@ -85,7 +85,9 @@ For Aiven MySQL, use the service's connection host, port, database name, usernam
 DB_SSL=true
 DB_SSL_CA_PATH=src/certs/ca.pem
 ```
-Download the CA certificate from the Aiven service console and save it at `backend/src/certs/ca.pem` (or set `DB_SSL_CA_PATH` to another path relative to the `backend` directory). Keep the certificate out of source control. When `DB_SSL=true`, the API requires TLS and validates the server certificate; the server will not start if the CA file cannot be read or the certificate cannot be verified. Production startup also rejects disabled TLS and the root database user.
+Download the CA certificate from the Aiven service console. For local development, save it at `backend/src/certs/ca.pem` (or set `DB_SSL_CA_PATH` to another path relative to the `backend` directory). Keep the certificate out of source control.
+
+On Render, add the CA certificate in the service's **Secret Files** with the filename `ca.pem`, then set the service environment variable `DB_SSL_CA_PATH=/etc/secrets/ca.pem`. Do not use the local relative path on Render: `backend/src/certs/ca.pem` is intentionally ignored and is not included in deployments. When `DB_SSL=true`, the API requires TLS and validates the server certificate; startup reports a configuration error if the configured CA file is unavailable. Production startup also rejects disabled TLS and the root database user.
 
 Check the connection with `npm start` or `npm run db:migrate:status`. The migration-status command may create Sequelize's `SequelizeMeta` bookkeeping table if it does not exist.
 
