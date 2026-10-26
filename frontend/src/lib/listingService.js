@@ -4,6 +4,14 @@ import { filterListings } from "./filterListings";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
+function getApiBaseUrl() {
+  if (typeof window === "undefined" && process.env.BACKEND_URL) {
+    return `${process.env.BACKEND_URL.replace(/\/$/, "")}/api`;
+  }
+
+  return API_BASE_URL;
+}
+
 /**
  * Service Layer for Listings.
  * Fetches database-driven property listings from backend API with demo fallback.
@@ -25,7 +33,7 @@ export async function getListings(filters = {}, options = {}) {
 
   let propertyList = [];
   try {
-    const res = await fetch(`${API_BASE_URL}/properties`, {
+    const res = await fetch(`${getApiBaseUrl()}/properties`, {
       cache: "no-store",
     });
     if (res.ok) {
@@ -59,7 +67,7 @@ export async function getListings(filters = {}, options = {}) {
  */
 export async function getListingById(id) {
   try {
-    const res = await fetch(`${API_BASE_URL}/properties/${encodeURIComponent(id)}`, {
+    const res = await fetch(`${getApiBaseUrl()}/properties/${encodeURIComponent(id)}`, {
       cache: "no-store",
     });
     if (res.ok) {
@@ -79,7 +87,7 @@ export async function getListingById(id) {
  */
 export async function getListingBySlug(slug) {
   try {
-    const res = await fetch(`${API_BASE_URL}/properties/${encodeURIComponent(slug)}`, {
+    const res = await fetch(`${getApiBaseUrl()}/properties/${encodeURIComponent(slug)}`, {
       cache: "no-store",
     });
     if (res.ok) {
@@ -112,7 +120,7 @@ export async function getLocations() {
  */
 export async function getFeaturedListings(limit = 4) {
   try {
-    const res = await fetch(`${API_BASE_URL}/properties/featured?limit=${limit}`, {
+    const res = await fetch(`${getApiBaseUrl()}/properties/featured?limit=${limit}`, {
       cache: "no-store",
     });
     if (res.ok) {
