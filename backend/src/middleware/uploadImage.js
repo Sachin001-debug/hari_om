@@ -12,13 +12,7 @@ const logger = require('../utils/logger');
 const UPLOAD_ROOT = path.resolve(__dirname, '../..', env.UPLOAD_DIR);
 const PROPERTIES_DIR = path.join(UPLOAD_ROOT, 'properties');
 
-if (env.NODE_ENV === 'production' && (!fs.existsSync(UPLOAD_ROOT) || !fs.statSync(UPLOAD_ROOT).isDirectory())) {
-  throw new Error('Production UPLOAD_DIR must exist on a mounted persistent disk.');
-}
-
-if (!fs.existsSync(PROPERTIES_DIR)) {
-  fs.mkdirSync(PROPERTIES_DIR, { recursive: true });
-}
+fs.mkdirSync(PROPERTIES_DIR, { recursive: true });
 
 // Allowed MIME types and extensions
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/jpg', 'image/png']);

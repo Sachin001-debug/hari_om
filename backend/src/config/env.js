@@ -92,14 +92,6 @@ const envSchema = z.object({
     });
   }
 
-  if (!path.isAbsolute(config.UPLOAD_DIR)) {
-    context.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ['UPLOAD_DIR'],
-      message: 'Set UPLOAD_DIR to the absolute path of a mounted persistent disk in production.'
-    });
-  }
-
   if (!config.FRONTEND_URL?.startsWith('https://') || !config.BACKEND_URL?.startsWith('https://')) {
     context.addIssue({
       code: z.ZodIssueCode.custom,

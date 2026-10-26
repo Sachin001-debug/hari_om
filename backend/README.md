@@ -165,7 +165,7 @@ FLUSH PRIVILEGES;
 # Render build command: npm ci
 # Render start command: npm start
 # Render health check path: /api/health
-# Attach a Render persistent disk at /var/data and set UPLOAD_DIR=/var/data.
+# Demo deployment: use UPLOAD_DIR=uploads; Render's filesystem is temporary.
 #
 # Run migrations separately in a controlled release/CI job, using the
 # migration-only database user rather than Render runtime credentials:
@@ -177,7 +177,7 @@ npm run db:seed -- --env production
 
 For Vercel, set `frontend/` as the root directory and use `npm run build`. Set `BACKEND_URL` to the HTTPS Render service origin so Next.js proxies `/api/*` and `/uploads/*` through the frontend origin. Keep `NEXT_PUBLIC_API_URL` empty or set it to `/api` so authentication cookies remain same-site. Set backend `FRONTEND_URL` to the exact production Vercel domain. CORS and CSRF checks permit only this exact origin.
 
-Attach a persistent disk to the Render backend service with mount path `/var/data` and set `UPLOAD_DIR=/var/data`. Production startup fails unless this absolute upload directory already exists, preventing uploads from silently falling back to Render's ephemeral filesystem. Back up the disk or move uploads to durable object storage if they need independent retention.
+For a no-cost live demo, leave `UPLOAD_DIR=uploads` (or unset it). The backend creates that directory on startup and stores uploaded images on Render's temporary filesystem. Images can disappear after a restart or redeploy, while the property records remain in MySQL and may then reference missing images. This is suitable for a temporary demo only; use durable object storage or a persistent disk before relying on uploaded images in production.
 
 ---
 
