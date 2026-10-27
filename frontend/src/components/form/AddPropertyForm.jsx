@@ -238,12 +238,32 @@ export default function AddPropertyForm() {
     }
   }
 
-  function handleCameraCapture() {
+  async function handleCameraCapture() {
     const video = videoRef.current;
     const stream = cameraStreamRef.current;
 
-    if (!video || !stream || !video.videoWidth) {
-      setCameraError('Camera preview is not ready yet. Please try again.');
+    if (!video || !stream) {
+      setCameraError('Camera is not active. Please open the camera again.');
+      return;
+    }
+
+    // Wait until the video stream actually has frames ready before capturing
+    const isReady = await new Promise((resolve) => {
+      if (video.videoWidth && video.videoHeight) {
+        resolve(true);
+        return;
+      }
+      const onReady = () => {
+        video.removeEventListener('loadeddata', onReady);
+        video.removeEventListener('canplay', onReady);
+        resolve(Boolean(video.videoWidth && video.videoHeight));
+      };
+      video.addEventListener('loadeddata', onReady);
+      video.addEventListener('canplay', onReady);
+    });
+
+    if (!isReady) {
+      setCameraError('Camera preview is still loading. Please try again in a moment.');
       return;
     }
 
@@ -258,21 +278,17 @@ export default function AddPropertyForm() {
 
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    canvas.toBlob(
-      (blob) => {
-        stopCamera();
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.92));
 
-        if (!blob) {
-          setCameraError('Failed to capture the photo. Please try again.');
-          return;
-        }
+    stopCamera();
 
-        const file = new File([blob], `camera-photo-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' });
-        applyImageFile(file);
-      },
-      blob.type || 'image/jpeg',
-      0.92,
-    );
+    if (!blob) {
+      setCameraError('Failed to capture the photo. Please try again.');
+      return;
+    }
+
+    const file = new File([blob], `camera-photo-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' });
+    applyImageFile(file);
   }
 
   function validateForm() {
