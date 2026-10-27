@@ -3,7 +3,7 @@
 
 import { useMemo, useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { ImagePlus, Info, MapPin, Sparkles, UploadCloud, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { ImagePlus, Camera, Info, MapPin, Sparkles, UploadCloud, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { AREAS_BY_CITY, CITIES } from '@/data/locations';
 import { formatLandArea, formatPrice } from '@/lib/formatPrice';
 import { createProperty } from '@/lib/api';
@@ -74,8 +74,12 @@ export default function AddPropertyForm() {
   const [serverError, setServerError] = useState('');
   const [successInfo, setSuccessInfo] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [cameraError, setCameraError] = useState('');
 
   const fileInputRef = useRef(null);
+  const cameraStreamRef = useRef(null);
+  const videoRef = useRef(null);
 
   const availableAreas = AREAS_BY_CITY[form.city.toLowerCase()] || [];
   const keywords = useMemo(
@@ -92,6 +96,16 @@ export default function AddPropertyForm() {
       }
     };
   }, [imagePreviewUrl]);
+
+  // Stop camera stream when component unmounts
+  useEffect(() => {
+    return () => {
+      if (cameraStreamRef.current) {
+        cameraStreamRef.current.getTracks().forEach((track) => track.stop());
+        cameraStreamRef.current = null;
+      }
+    };
+  }, []);
 
   function updateField(event) {
     const { name, value, checked, type } = event.target;
@@ -129,14 +143,9 @@ export default function AddPropertyForm() {
     return '';
   }
 
-  function handleFileChange(event) {
-    const file = event.target.files?.[0];
+  function applyImageFile(file) {
     setImageError('');
     setServerError('');
-
-    if (!file) {
-      return;
-    }
 
     const validationMsg = validateSelectedFile(file);
     if (validationMsg) {
@@ -154,6 +163,20 @@ export default function AddPropertyForm() {
     const objectUrl = URL.createObjectURL(file);
     setImageFile(file);
     setImagePreviewUrl(objectUrl);
+    setCameraError('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }
+
+  function handleFileChange(event) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    applyImageFile(file);
   }
 
   function handleRemoveImage() {
@@ -163,9 +186,93 @@ export default function AddPropertyForm() {
     setImageFile(null);
     setImagePreviewUrl('');
     setImageError('');
+    setCameraError('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  }
+
+  async function startCamera() {
+    setCameraError('');
+    setServerError('');
+
+    if (cameraStreamRef.current) {
+      cameraStreamRef.current.getTracks().forEach((track) => track.stop());
+      cameraStreamRef.current = null;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+        audio: false,
+      });
+      cameraStreamRef.current = stream;
+      setIsCameraOpen(true);
+
+      requestAnimationFrame(() => {
+        const video = videoRef.current;
+        if (video) {
+          video.srcObject = stream;
+          video.play().catch(() => {});
+        }
+      });
+    } catch (err) {
+      setCameraError(
+        err?.name === 'NotAllowedError' || err?.name === 'SecurityError'
+          ? 'Camera permission was denied. Please allow camera access in your browser, or use file selection instead.'
+          : 'Unable to access the camera on this device. Please try again or use file selection instead.',
+      );
+    }
+  }
+
+  function stopCamera() {
+    if (cameraStreamRef.current) {
+      cameraStreamRef.current.getTracks().forEach((track) => track.stop());
+      cameraStreamRef.current = null;
+    }
+    setIsCameraOpen(false);
+
+    const video = videoRef.current;
+    if (video) {
+      video.srcObject = null;
+    }
+  }
+
+  function handleCameraCapture() {
+    const video = videoRef.current;
+    const stream = cameraStreamRef.current;
+
+    if (!video || !stream || !video.videoWidth) {
+      setCameraError('Camera preview is not ready yet. Please try again.');
+      return;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext('2d');
+    if (!context) {
+      setCameraError('Unable to capture the photo on this device.');
+      return;
+    }
+
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    canvas.toBlob(
+      (blob) => {
+        stopCamera();
+
+        if (!blob) {
+          setCameraError('Failed to capture the photo. Please try again.');
+          return;
+        }
+
+        const file = new File([blob], `camera-photo-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' });
+        applyImageFile(file);
+      },
+      blob.type || 'image/jpeg',
+      0.92,
+    );
   }
 
   function validateForm() {
@@ -616,7 +723,7 @@ export default function AddPropertyForm() {
                 <ImagePlus aria-hidden="true" className="h-4 w-4 text-admin-primary" />
                 <h2 className="text-sm font-semibold text-admin-text">Property image</h2>
               </div>
-              <span className="text-[11px] text-admin-muted">JPEG, JPG, or PNG (Max 5 MB)</span>
+              <span className="text-[11px] text-admin-muted">JPEG, JPG, or PNG (Max 5 MB) &middot; or capture instantly with camera</span>
             </div>
 
             <div className="space-y-3">
@@ -631,21 +738,32 @@ export default function AddPropertyForm() {
               />
 
               {!imageFile ? (
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-center transition-colors hover:border-admin-primary/60 hover:bg-admin-primary-soft/10 ${
-                    imageError ? 'border-red-300 bg-red-50/30' : 'border-admin-border bg-white'
-                  }`}
-                >
-                  <div className="grid h-12 w-12 place-items-center rounded-full bg-admin-primary-soft text-admin-primary">
-                    <UploadCloud className="h-6 w-6" />
+                <div className="space-y-3">
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-center transition-colors hover:border-admin-primary/60 hover:bg-admin-primary-soft/10 ${
+                      imageError ? 'border-red-300 bg-red-50/30' : 'border-admin-border bg-white'
+                    }`}
+                  >
+                    <div className="grid h-12 w-12 place-items-center rounded-full bg-admin-primary-soft text-admin-primary">
+                      <UploadCloud className="h-6 w-6" />
+                    </div>
+                    <p className="mt-3 text-xs font-semibold text-admin-text">
+                      Click to select property image from your device
+                    </p>
+                    <p className="mt-1 text-[11px] text-admin-muted">
+                      Supports high-resolution JPEG, JPG, and PNG files up to 5 MB
+                    </p>
                   </div>
-                  <p className="mt-3 text-xs font-semibold text-admin-text">
-                    Click to select property image from your device
-                  </p>
-                  <p className="mt-1 text-[11px] text-admin-muted">
-                    Supports high-resolution JPEG, JPG, and PNG files up to 5 MB
-                  </p>
+
+                  <button
+                    type="button"
+                    onClick={startCamera}
+                    className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-admin-border bg-white px-3 text-xs font-semibold text-admin-text transition hover:border-admin-primary/60 hover:text-admin-primary"
+                  >
+                    <Camera aria-hidden="true" className="h-4 w-4" />
+                    Take photo with camera
+                  </button>
                 </div>
               ) : (
                 <div className="flex items-center justify-between rounded-lg border border-admin-border bg-white p-3">
@@ -678,6 +796,32 @@ export default function AddPropertyForm() {
                       <X className="h-4 w-4" />
                     </button>
                   </div>
+                </div>
+              )}
+
+              {isCameraOpen && (
+                <div className="space-y-3">
+                  <div className="relative overflow-hidden rounded-xl border border-admin-border bg-black">
+                    <video ref={videoRef} autoPlay playsInline muted className="h-72 w-full" />
+                    <div className="absolute bottom-3 left-0 right-0 flex items-center justify-center gap-2 bg-black/60 p-3">
+                      <button
+                        type="button"
+                        onClick={stopCamera}
+                        className="inline-flex min-h-9 items-center justify-center rounded-lg border border-white/40 bg-white/10 px-4 text-xs font-semibold text-white transition hover:bg-white/20"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleCameraCapture}
+                        className="inline-flex min-h-9 items-center justify-center gap-2 rounded-lg bg-admin-primary px-4 text-xs font-semibold text-white transition hover:bg-admin-primary-hover"
+                      >
+                        <Camera aria-hidden="true" className="h-4 w-4" />
+                        Capture photo
+                      </button>
+                    </div>
+                  </div>
+                  {cameraError && <p className="text-[11px] font-medium text-red-600">{cameraError}</p>}
                 </div>
               )}
 
